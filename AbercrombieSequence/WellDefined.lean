@@ -93,7 +93,7 @@ lemma q_h (m : ℕ) : (q k m - 1) * (m+1) < h k m ∧ h k m ≤ q k m * (m+1) :=
     rw [←add_sub]
     apply add_lt_iff_neg_left.2
     apply sub_neg.2
-    exact bc_lt_m k _
+    exact bc_lt_m _ _
   · rw [←qrm k]
     unfold r
     simp
@@ -102,25 +102,17 @@ lemma q_h (m : ℕ) : (q k m - 1) * (m+1) < h k m ∧ h k m ≤ q k m * (m+1) :=
 -- This lemma is unused
 lemma q_ceil (m : ℕ) : q k m = ⌈(↑(h k m) : ℚ) / (↑(m+1) : ℚ)⌉ := by
   symm
+  have qh := q_h k m
+  norm_cast at qh
   have t : 0 < (↑(m+1) : ℚ) := by norm_cast; simp
   apply Int.ceil_eq_iff.mpr
   constructor
   · apply (lt_div_iff₀ t).2
-    rw_mod_cast [sub_mul]
-    simp
-    rw [←qrm k]
-    unfold r
-    rw [←add_sub]
-    apply add_lt_iff_neg_left.2
-    apply sub_neg.2
-    exact bc_lt_m _ _
+    norm_cast
+    linarith
   · apply (div_le_iff₀' t).2
     norm_cast
-    simp
-    rw [mul_comm, ←qrm k]
-    unfold r
-    simp
-    exact bc_nonneg _ _
+    linarith
 
 lemma q_h' (m : ℕ) (qq : ℤ) (h : (qq - 1) * (m+1) < h k m ∧ h k m ≤ qq * (m+1)) : qq = q k m := by
   rcases h with ⟨h1, h2⟩
@@ -190,7 +182,7 @@ lemma q_stays_const (hyp : ∃m>0, q k m = q k (m+1)) : q_const k := by
       simp [t, ←bc.eq_def, bc_nonneg]
       omega
   constructor
-  · suffices hh : q k m - bc k (m+1) < ↑m+3 by linarith
+  · suffices q k m - bc k (m+1) < ↑m+3 by linarith
     have aux : m-1+1 = m ∧ m-1+2 = m+1 := by omega
     have : q k m - bc k (m+1) = bc k m := by
       have qbcl := qbc k (m-1)
@@ -204,9 +196,7 @@ lemma q_stays_const (hyp : ∃m>0, q k m = q k (m+1)) : q_const k := by
     simp at this
     unfold r at this
     trans ↑m+1 <;> linarith
-  · calc
-      _ ≤ q k m * (↑m+1+1) + q k m := (add_le_add_iff_left _).2 hyp₂
-      _ = _ := by ring
+  · linarith
 
 lemma need_q_const (hyp : q_const k) : bc_periodic k := by
   unfold bc_periodic
